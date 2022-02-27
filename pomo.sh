@@ -87,7 +87,8 @@ function pomo_ispaused {
 function pomo_pause {
     # Toggle the pause status on the POMO file.
     running=$(pomo_stat)
-    if pomo_isstopped || pomo_ispaused; then
+    pomo_isstopped && return
+    if pomo_ispaused; then
         # Restart a stopped/paused pomo block by updating the time stamp of the POMO
         # file.
         pomo_stamp "$running"
@@ -184,6 +185,7 @@ function pomo_msg {
         if $work; then
             send_msg "$work_end_msg"
             timew stop || true
+            xdg-screensaver lock
         else
             send_msg "$break_end_msg"
             timew start
