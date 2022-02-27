@@ -53,6 +53,7 @@ function pomo_start {
     test -e "$(dirname -- "$POMO")" || mkdir "$(dirname -- "$POMO")"
     :> "$POMO" # remove saved time stamp due to a pause.
     touch "$POMO"
+    timew start
 }
 
 function pomo_isstopped {
@@ -65,6 +66,7 @@ function pomo_isstopped {
 function pomo_stop {
     # Stop pomo cycles.
     rm -f "$POMO"
+    timew stop || true
 }
 
 function pomo_stamp {
@@ -89,9 +91,11 @@ function pomo_pause {
         # Restart a stopped/paused pomo block by updating the time stamp of the POMO
         # file.
         pomo_stamp "$running"
+        timew start
     else
         # Pause a pomo block.
         echo "$running" > "$POMO"
+        timew stop || true
     fi
 }
 
@@ -127,16 +131,17 @@ function pomo_clock {
         left=$(( WORK_TIME*60 - running ))
         if [[ $left -lt 0 ]]; then
             left=$(( left + BREAK_TIME*60 ))
-            prefix=B
+            color=#ff0086
         else
-            prefix=W
+            color=#00c918
         fi
-        pomo_ispaused && prefix=P$prefix
+        pomo_ispaused && prefix=P
         min=$(( left / 60 ))
-        sec=$(( left - 60*min ))
-        printf "%2s%02d:%02d\n" $prefix $min $sec
+        out=$prefix$min
+        printf "%s\n" $out
+        printf "%s" $color
     else
-        printf "  --:--\n"
+        printf ""
     fi
 }
 
@@ -178,8 +183,10 @@ function pomo_msg {
     if [[ $(( stat - running - left )) -le 1 ]]; then
         if $work; then
             send_msg "$work_end_msg"
+            timew stop || true
         else
             send_msg "$break_end_msg"
+            timew start
         fi
     fi
     return 0
