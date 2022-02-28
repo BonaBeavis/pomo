@@ -195,15 +195,17 @@ function pomo_msg {
 }
 
 function pomo_notify {
-    while true; do
-        if pomo_msg; then
-            # sleep for a second so that the timestamp of POMO is not the
-            # current time (i.e. allow next unit to start).
-            sleep 1
-        else
-            sleep 60
-        fi
-    done
+    if ! pgrep -x "pomo.sh" > /dev/null; then
+        while true; do
+            if pomo_msg; then
+                # sleep for a second so that the timestamp of POMO is not the
+                # current time (i.e. allow next unit to start).
+                sleep 1
+            else
+                sleep 60
+            fi
+        done
+    fi
 }
 
 function send_msg {
